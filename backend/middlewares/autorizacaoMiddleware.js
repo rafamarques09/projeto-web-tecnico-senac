@@ -6,7 +6,7 @@ function autorizacaoMiddleware(...perfisPermitidos){
             });
         }
         if(!perfisPermitidos.includes(req.usuario.perfil)){
-            return res.status(409).json({
+            return res.status(403).json({
                 message: 'Seu perfil não tem permissão para esta operação.'
             })
         }

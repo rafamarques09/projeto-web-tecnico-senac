@@ -22,7 +22,7 @@ async function alterarPerfil(req,res, next) {
             });
         }
 
-        const [alvo] = await pool.execute("SELECT id, perfil FROM usuarios WHERRE id = ?",[id]);
+        const [alvo] = await pool.execute("SELECT id, perfil FROM usuarios WHERE id = ?",[id]);
         if(alvo.length === 0 ){
             return res.status(404).json({
                 message: 'Usuário não encontrado.'
@@ -30,7 +30,7 @@ async function alterarPerfil(req,res, next) {
         }
 
         if(alvo[0].perfil === 'ADMIN' && perfil !== "ADMIN"){
-            const [admins] = await pool.execute("SELECT COUNT(*) AS total FROM usuarios WHERE perrfil = 'ADMIM'");
+            const [admins] = await pool.execute("SELECT COUNT(*) AS total FROM usuarios WHERE perfil = 'ADMIN'");
             if(admins[0].total <= 1){
                 return res.status(409).json({
                     message:'Mantenha pelo menos um administrador no sistema.'
