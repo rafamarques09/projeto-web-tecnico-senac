@@ -1,9 +1,13 @@
 import path from "path";
 import { pool, testarConexao } from "./database/conexao.js";
 import express from "express";
+import { fileURLToPath } from 'url';
 import corsMiddleware from "./middlewares/corsMiddleware.js";
 import authRoutes from "./routes/authRoutes.js";
 import usuariosRoutes from "./routes/usuariosRoutes.js";
+import agendaRoutes from "./routes/agendaRoutes.js";
+import animaisRoutes from "./routes/animaisRoutes.js";
+import solicitacoesRoutes from "./routes/solicitacoesRoutes.js";
 
 const app = express();
 const PORT = Number(process.env.PORT || 3000);
@@ -14,6 +18,15 @@ app.use(express.json({limit:'100kb'}));
 
 app.use('/auth', authRoutes);
 app.use('/usuarios', usuariosRoutes);
+app.use('/animais', animaisRoutes);
+app.use('/agenda', agendaRoutes);
+app.use('/solicitacoes', solicitacoesRoutes);
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+app.use(express.static(path.join(__dirname, '..', 'frontend')));
+app.get('/', (req, res) => res.redirect('/login.html'));
 
 app.use((req,res)=> res.status(404).json({message:'Rota não encontrada.'}));
 
