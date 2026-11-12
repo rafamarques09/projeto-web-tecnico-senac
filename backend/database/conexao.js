@@ -10,7 +10,8 @@ const pool = mysql.createPool({
     database: process.env.DB_NAME || 'castrapet',
     waitForConnections: true,
     connectionLimit: 10,
-    charset: 'utf8mb4'
+    charset: 'utf8mb4',
+    dateStrings: true 
 });
 
 //Teste de conexão com o banco de dados
