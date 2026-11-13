@@ -4,27 +4,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Entrar | CastraPet</title>
+    <meta name="theme-color" content="#174C3C">
+    <link rel="icon" href="assets/icons/favicon.svg" type="image/svg+xml">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Manrope:wght@600;700;800&display=swap">
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/auth.css">
+    <title>Entrar | CastraPet</title>
 </head>
 
 <body>
-    <div class="centro">
-        <div class="cartao">
-            <h1>CastraPet</h1>
-            <p class="subtitulo">Entre para acompanhar a castração do seu animal.</p>
-            <form id="form-login">
-                <label for="email">E-mail</label>
-                <input type="email" id="email" required autocomplete="email">
-                <label for="senha">Senha</label>
-                <input type="password" id="senha" required autocomplete="current-password">
-                <button type="submit">Entrar</button>
-                <p id="mensagem" class="mensagem" role="alert"></p>
-            </form>
-            <p class="rodape-form">Ainda não tem conta? <a href="cadastro.html">Cadastre-se</a></p>
-        </div>
+    <div class="auth">
+        <aside class="auth-aside">
+            <a class="brand" href="index.html"><span class="brand-mark"><i
+                        data-icon="paw-print"></i></span>CastraPet</a>
+            <div>
+                <h2>Gestão do programa municipal de castração.</h2>
+                <p>Acesse o painel de acordo com o seu perfil: tutor, clínica conveniada ou gestão municipal.</p>
+                <ul class="auth-points">
+                    <li><i data-icon="calendar-check"></i>Solicitação com horários reais e vagas controladas</li>
+                    <li><i data-icon="clipboard-list"></i>Acompanhamento de cada etapa do atendimento</li>
+                    <li><i data-icon="badge-check"></i>Registro do microchip vinculado ao animal</li>
+                </ul>
+            </div>
+            <p style="font-size:.8125rem;margin:0">© <span data-ano></span> CastraPet</p>
+        </aside>
+        <main class="auth-main" id="conteudo">
+            <div class="auth-top"><a class="brand" href="index.html"><span class="brand-mark"><i
+                            data-icon="paw-print"></i></span>CastraPet</a><a class="btn btn-ghost" href="index.html"><i
+                        data-icon="arrow-left"></i>Página inicial</a></div>
+            <div class="auth-box">
+                <h1>Entrar na plataforma</h1>
+                <p>Informe seu e-mail e senha para continuar.</p>
+                <div id="aviso" class="alert" aria-live="polite"></div>
+                <form id="form-login" novalidate>
+                    <div class="field"><label for="email">E-mail <span class="req" aria-hidden="true">*</span></label>
+                        <div class="control"><i data-icon="mail"></i><input id="email" name="email" type="email"
+                                autocomplete="email" inputmode="email" required aria-describedby="e-email"
+                                placeholder="seu@email.com"></div><span class="err" id="e-email"></span>
+                    </div>
+                    <div class="field"><label for="senha">Senha <span class="req" aria-hidden="true">*</span></label>
+                        <div class="control"><i data-icon="lock"></i><input id="senha" name="senha" type="password"
+                                class="has-toggle" autocomplete="current-password" required aria-describedby="e-senha">
+                            <button class="pw-toggle" type="button" data-toggle-senha="senha" aria-pressed="false"
+                                aria-label="Mostrar senha"><i class="icon-show" data-icon="eye"></i><i class="icon-hide"
+                                    data-icon="eye-off"></i></button>
+                        </div><span class="err" id="e-senha"></span>
+                    </div>
+                    <button class="btn btn-primary btn-lg btn-block" type="submit"
+                        id="entrar"><span>Entrar</span></button>
+                </form>
+                <p class="auth-switch">Ainda não tem conta? <a href="cadastro.html">Criar conta de tutor</a></p>
+            </div>
+        </main>
     </div>
-    <script src="js/auth.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/icons.js"></script>
+    <script src="js/utils.js"></script>
     <script src="js/login.js"></script>
 </body>
 
