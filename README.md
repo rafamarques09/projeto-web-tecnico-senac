@@ -100,18 +100,27 @@ A organização dos agendamentos é feita por uma **agenda de dias e horários**
 projeto-web-tecnico-senac/
 ├── backend/
 │   ├── server.js
-│   ├── routes/            
-│   ├── controllers/       
-│   ├── middlewares/       
-│   ├── database/          
+│   ├── routes/            authRoutes, usuariosRoutes, animaisRoutes, agendaRoutes, solicitacoesRoutes
+│   ├── controllers/       authController, usuariosController, animaisController, agendaController, solicitacoesController
+│   ├── middlewares/       autenticacaoMiddleware, autorizacaoMiddleware, corsMiddleware
+│   ├── database/          conexao.js, seed.js
 │   ├── .env.example
 │   ├── .gitignore
 │   └── package.json
-├── frontend/              
+├── frontend/
+│   ├── index.html, login.html, cadastro.html                    páginas públicas
+│   ├── tutor.html, animais.html, solicitar.html,
+│   │   solicitacoes.html, guia.html                             área do tutor
+│   ├── clinica.html, agenda.html, atendimentos.html             área da clínica
+│   ├── admin.html, triagem.html, usuarios.html,
+│   │   animais-admin.html                                       área da prefeitura
+│   ├── perfil.html                                              comum aos três perfis
+│   ├── css/               style.css, layout.css, components.css, auth.css
+│   ├── js/                config, api, utils, icons, components + um script por página
+│   └── assets/icons/      favicon.svg, NOTICE.md
 ├── sql/
-│   ├── castrapet.sql      
-│   └── dados_teste.sql    
-├── .gitignore
+│   ├── agendamentoCastrapet.sql    estrutura do banco
+│   └── dadosTeste.sql              dados de demonstração
 └── README.md
 ```
 
@@ -269,17 +278,146 @@ Scripts: [`sql/castrapet.sql`](sql/castrapet.sql) (estrutura) e [`sql/dados_test
 | `GET` | `/auth/perfil` | Logado | Dados do usuário autenticado | 200, 401 |
 | `GET` | `/usuarios` | `ADMIN` | Lista os usuários (sem senha) | 200, 401, 403 |
 | `PUT` | `/usuarios/:id/perfil` | `ADMIN` | Altera o perfil de um usuário | 200, 400, 401, 403, 404, 409 |
+| `GET` | `/agenda` | Logado | Lista horários com vagas restantes (o tutor vê só os abertos e futuros) | 200, 401 |
+| `POST` | `/agenda` | `CLINICA`, `ADMIN` | Cadastra um horário | 201, 400, 401, 403, 409 |
+| `PUT` | `/agenda/:id` | `CLINICA`, `ADMIN` | Edita, abre ou fecha um horário | 200, 400, 401, 403, 404, 409 |
+| `DELETE` | `/agenda/:id` | `CLINICA`, `ADMIN` | Exclui um horário sem solicitações | 200, 400, 401, 403, 404, 409 |
+| `GET` | `/animais` | `TUTOR`, `ADMIN` | Tutor: os seus animais; admin: todos | 200, 401, 403 |
+| `POST` | `/animais` | `TUTOR` | Cadastra um animal | 201, 400, 401, 403 |
+| `PUT` | `/animais/:id` | `TUTOR` | Edita um animal próprio | 200, 400, 401, 403, 404 |
+| `DELETE` | `/animais/:id` | `TUTOR` | Exclui um animal próprio sem solicitações | 200, 400, 401, 403, 404, 409 |
+| `GET` | `/solicitacoes?status=` | Logado | Cada perfil vê só o que lhe cabe | 200, 400, 401 |
+| `POST` | `/solicitacoes` | `TUTOR` | Solicita castração em um horário | 201, 400, 401, 403, 404, 409 |
+| `PUT` | `/solicitacoes/:id/status` | Logado | Muda o status conforme o perfil e o fluxo | 200, 400, 401, 403, 404, 409 |
+| `DELETE` | `/solicitacoes/:id` | `TUTOR`, `ADMIN` | Exclui solicitação pendente, recusada ou cancelada | 200, 400, 401, 403, 404, 409 |
+
+**Códigos de status usados:** `200` sucesso · `201` criado · `400` dados inválidos · `401` não autenticado · `403` sem permissão · `404` não encontrado · `409` conflito · `500` erro interno.
+
+As respostas de erro trazem um JSON com a descrição do problema (`message` ou `mensagem`); o front-end trata os dois nomes.
+
+**Exemplo: login** (`POST /auth/login`, corpo JSON). A resposta traz o `token`.
+
+```json
+{
+  "email": "admin@castrapet.com",
+  "senha": "Admin@123"
+}
+```
+
+**Exemplo: solicitar castração** (`POST /solicitacoes`, com o token de um `TUTOR`)
+
+```json
+{
+  "animal_id": 2,
+  "agenda_id": 1,
+  "cad_unico": "12345678901",
+  "observacoes": "Animal dócil."
+}
+```
+
+**Exemplo: recusar uma solicitação** (`PUT /solicitacoes/1/status`, com o token de um `ADMIN`)
+
+```json
+{
+  "status": "RECUSADO",
+  "justificativa": "Documentação incompleta."
+}
+```
+
+**Exemplo: concluir um atendimento** (`PUT /solicitacoes/1/status`, com o token de uma `CLINICA`)
+
+```json
+{
+  "status": "CONCLUIDO",
+  "microchip": "985112345678901"
+}
+```
+
+---
+
+## Permissões por Perfil
+
+| Ação | `TUTOR` | `CLINICA` | `ADMIN` |
+| :--- | :---: | :---: | :---: |
+| Ver horários da agenda | sim (abertos e futuros) | sim | sim |
+| Criar, editar e excluir horários | não | sim | sim |
+| Cadastrar, editar e excluir **os próprios** animais | sim | não | não |
+| Ver animais | os seus | não | todos |
+| Criar solicitação (escolhe o horário) | sim | não | não |
+| Ver solicitações | as suas | só as aprovadas | todas |
+| Aprovar ou recusar (triagem) | não | não | sim |
+| Check-in e conclusão com microchip | não | sim | não |
+| Cancelar a própria solicitação | sim | não | não |
+| Excluir solicitação pendente, recusada ou cancelada | a sua | não | qualquer |
+| Listar usuários e alterar perfis | não | não | sim |
+
+---
+
+## Regras de Negócio
+
+- **Controle de vagas:** cada horário da agenda tem um limite de vagas. Solicitações `PENDENTE`, `APROVADO`, `CHECKIN` e `CONCLUIDO` ocupam vaga; `RECUSADO` e `CANCELADO` liberam.
+- **Sem conflito de horário:** a criação da solicitação usa transação com bloqueio da linha do horário (`SELECT ... FOR UPDATE`), então dois pedidos simultâneos não ocupam a mesma última vaga.
+- **Um pedido por vez:** um animal não pode ter duas solicitações em andamento nem ser castrado duas vezes.
+- **Horários válidos:** não se solicita horário fechado ou no passado; não se cria horário no passado; não se muda data ou hora de um horário que já tem solicitações; as vagas não podem ficar abaixo do já ocupado; um horário com solicitações não pode ser excluído (deve ser fechado).
+- **Fluxo por perfil:** a prefeitura aprova ou recusa (a recusa exige justificativa); a clínica faz o check-in e conclui; o tutor só cancela a própria solicitação.
+- **Microchip:** exige 15 dígitos, é único no sistema e só a clínica o registra. Ao concluir, o animal passa a `castrado`.
+- **Dados do tutor protegidos:** cada tutor só enxerga e altera os próprios animais e solicitações.
+- **Cadastro:** a interface exige CPF válido (com dígito verificador) e telefone; a senha precisa ter no mínimo 8 caracteres.
+
+---
+
+## Como Testar
+
+### Pelas telas
+
+| # | Ação | Resultado esperado |
+| :--- | :--- | :--- |
+| 1 | Entrar como `tutor@castrapet.com` | Painel do tutor com Thor, Mia e a solicitação pendente |
+| 2 | Cadastrar um animal, editar e excluir | Mensagem de sucesso e a lista atualiza |
+| 3 | Solicitar castração da Mia pelo assistente | Solicitação criada como pendente |
+| 4 | Solicitar de novo para o mesmo animal | Erro: já existe solicitação em andamento |
+| 5 | Entrar como `admin@castrapet.com` e aprovar o Thor | Status vira Aprovada |
+| 6 | Recusar a Mia sem informar o motivo | Erro pedindo a justificativa |
+| 7 | Entrar como `clinica@castrapet.com` e fazer o check-in do Thor | Status vira Check-in realizado |
+| 8 | Concluir com 14 dígitos e depois com 15 | Erro; depois sucesso |
+| 9 | Voltar ao tutor | Thor com microchip e fora da lista de animais para solicitar |
+| 10 | Criar horário com 1 vaga, ocupar com um tutor e tentar com outro | "Não há mais vagas neste horário" |
+| 11 | Cancelar a solicitação | A vaga volta a aparecer para os tutores |
+
+### Pela API (Postman ou Thunder Client)
+
+Nas rotas protegidas, envie o cabeçalho `Authorization: Bearer <token>` com o token recebido no login.
+
+| # | Requisição | Resultado esperado |
+| :--- | :--- | :--- |
+| 1 | `POST /auth/cadastro` com dados válidos | `201` |
+| 2 | `POST /auth/cadastro` com o mesmo e-mail | `409` |
+| 3 | `POST /auth/login` com senha errada | `401` |
+| 4 | Qualquer rota protegida sem token | `401` |
+| 5 | `GET /usuarios` com token de `TUTOR` | `403` |
+| 6 | `POST /agenda` com token de `TUTOR` | `403` |
+| 7 | `POST /animais` com token de `CLINICA` | `403` |
+| 8 | `PUT /solicitacoes/:id/status` com `APROVADO` usando token de `TUTOR` | `403` |
+| 9 | `PUT /solicitacoes/:id/status` com `CHECKIN` numa solicitação pendente, com token de `CLINICA` | `409` |
+| 10 | `PUT /animais/:id` de um animal de outro tutor | `404` |
+| 11 | `POST /solicitacoes` de um animal já castrado | `409` |
+| 12 | `PUT /agenda/:id` com menos vagas do que as ocupadas | `409` |
+| 13 | `DELETE /agenda/:id` de um horário com solicitações | `409` |
+| 14 | No banco: `SELECT email, senha FROM usuarios;` | Senhas aparecem como hash (`$2b$10$...`) |
+
+---
+
+## Limitações Conhecidas
+
+- O check-in e a conclusão não são restritos pela API à data do agendamento; a tela apenas avisa quando a data é outra.
+- Não há cadastro de múltiplas clínicas, relatórios, edição dos dados pessoais nem recuperação de senha.
+- O perfil do usuário mostra CPF e telefone apenas quando a API os fornece (hoje, apenas na listagem do administrador).
 
 ---
 
 ## Andamento do Projeto
 
 - [x] **Entrega 1:** problema, proposta e estrutura inicial
-- [x] **Entrega 2:** banco de dados, cadastro e login (via API), JWT, perfis e middlewares
-- [ ] **Entrega 3:** interface (HTML, CSS e JavaScript com DOM e Fetch) e CRUD completo (animais, agenda e solicitações), com as regras de negócio:
-  - não permitir solicitações em horário sem vaga (com transação para evitar conflito entre pedidos simultâneos);
-  - não permitir horários fechados ou no passado;
-  - um animal não pode ter dois pedidos abertos nem ser castrado duas vezes;
-  - o microchip é único no sistema;
-  - permissões por perfil verificadas na API.
-- [ ] **Entrega 4:** funcionalidades finais (Guia Pré-Operatória, painel da prefeitura, microchipagem), tratamento de erros, documentação final e apresentação
+- [x] **Entrega 2:** banco de dados, cadastro e login, JWT, perfis e middlewares
+- [x] **Entrega 3:** interface (HTML, CSS e JavaScript com DOM e Fetch), CRUD completo (agenda, animais e solicitações), regras de negócio e permissões verificadas na API
+- [ ] **Entrega 4:** testes finais com o fluxo completo, tratamento de erros revisado, documentação final e apresentação
