@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#174C3C">
+    <link rel="icon" href="assets/icons/favicon.svg" type="image/svg+xml">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Manrope:wght@600;700;800&display=swap">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/auth.css">
+    <title>Criar conta | CastraPet</title>
+</head>
+
+<body>
+    <div class="auth">
+        <aside class="auth-aside">
+            <a class="brand" href="index.html"><span class="brand-mark"><i
+                        data-icon="paw-print"></i></span>CastraPet</a>
+            <div>
+                <h2>Cadastre-se como tutor e solicite a castração.</h2>
+                <p>Com a conta criada, você cadastra seus animais, escolhe um horário e acompanha todo o atendimento.
+                </p>
+                <ul class="auth-points">
+                    <li><i data-icon="user"></i>Cadastro gratuito de tutor</li>
+                    <li><i data-icon="paw-print"></i>Vários animais na mesma conta</li>
+                    <li><i data-icon="file-text"></i>Guia pré-operatória com o seu encaminhamento</li>
+                </ul>
+            </div>
+            <p style="font-size:.8125rem;margin:0">© <span data-ano></span> CastraPet</p>
+        </aside>
+        <main class="auth-main" id="conteudo">
+            <div class="auth-top"><a class="brand" href="index.html"><span class="brand-mark"><i
+                            data-icon="paw-print"></i></span>CastraPet</a><a class="btn btn-ghost" href="index.html"><i
+                        data-icon="arrow-left"></i>Página inicial</a></div>
+            <div class="auth-box wide">
+                <h1>Criar conta de tutor</h1>
+                <p>Preencha seus dados. Campos com <span class="req" style="color:var(--error)">*</span> são
+                    obrigatórios.</p>
+                <div id="aviso" class="alert" aria-live="polite"></div>
+                <form id="form-cadastro" novalidate>
+                    <div class="field"><label for="nome">Nome completo <span class="req"
+                                aria-hidden="true">*</span></label>
+                        <div class="control"><i data-icon="user"></i><input id="nome" name="nome" type="text"
+                                autocomplete="name" maxlength="100" required aria-describedby="e-nome"></div><span
+                            class="err" id="e-nome"></span>
+                    </div>
+                    <div class="field"><label for="email">E-mail <span class="req" aria-hidden="true">*</span></label>
+                        <div class="control"><i data-icon="mail"></i><input id="email" name="email" type="email"
+                                autocomplete="email" inputmode="email" maxlength="180" required
+                                aria-describedby="e-email"></div><span class="err" id="e-email"></span>
+                    </div>
+                    <div class="grid-2">
+                        <div class="field"><label for="cpf">CPF <span class="req" aria-hidden="true">*</span></label>
+                            <div class="control"><i data-icon="file-text"></i><input id="cpf" name="cpf" type="text"
+                                    inputmode="numeric" autocomplete="off" placeholder="000.000.000-00" maxlength="14"
+                                    required aria-describedby="e-cpf"></div><span class="err" id="e-cpf"></span>
+                        </div>
+                        <div class="field"><label for="telefone">Telefone <span class="req"
+                                    aria-hidden="true">*</span></label>
+                            <div class="control"><i data-icon="phone"></i><input id="telefone" name="telefone"
+                                    type="tel" inputmode="tel" autocomplete="tel" placeholder="(00) 00000-0000"
+                                    maxlength="15" required aria-describedby="e-telefone"></div><span class="err"
+                                id="e-telefone"></span>
+                        </div>
+                    </div>
+                    <div class="grid-2">
+                        <div class="field"><label for="senha">Senha <span class="req"
+                                    aria-hidden="true">*</span></label>
+                            <div class="control"><i data-icon="lock"></i><input id="senha" name="senha" type="password"
+                                    class="has-toggle" autocomplete="new-password" required
+                                    aria-describedby="d-senha e-senha">
+                                <button class="pw-toggle" type="button" data-toggle-senha="senha" aria-pressed="false"
+                                    aria-label="Mostrar senha"><i class="icon-show" data-icon="eye"></i><i
+                                        class="icon-hide" data-icon="eye-off"></i></button>
+                            </div>
+                            <span class="hint" id="d-senha">Mínimo de 8 caracteres.</span><span class="err"
+                                id="e-senha"></span>
+                        </div>
+                        <div class="field"><label for="confirma">Confirmar senha <span class="req"
+                                    aria-hidden="true">*</span></label>
+                            <div class="control"><i data-icon="lock"></i><input id="confirma" name="confirma"
+                                    type="password" class="has-toggle" autocomplete="new-password" required
+                                    aria-describedby="e-confirma">
+                                <button class="pw-toggle" type="button" data-toggle-senha="confirma"
+                                    aria-pressed="false" aria-label="Mostrar senha"><i class="icon-show"
+                                        data-icon="eye"></i><i class="icon-hide" data-icon="eye-off"></i></button>
+                            </div><span class="err" id="e-confirma"></span>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary btn-lg btn-block" type="submit" id="enviar"><span>Criar
+                            conta</span></button>
+                </form>
+                <p class="auth-switch">Já tem conta? <a href="login.html">Entrar</a></p>
+            </div>
+        </main>
+    </div>
+    <script src="js/config.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/icons.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/cadastro.js"></script>
+</body>
+
+</html>
