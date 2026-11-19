@@ -22,7 +22,6 @@
         }
     };
 
-    // A API responde erros ora em "mensagem", ora em "message".
     async function requisitar(caminho, { method = 'GET', body, auth = true } = {}) {
         const headers = {};
         if (body !== undefined) headers['Content-Type'] = 'application/json';
@@ -37,7 +36,7 @@
         let data = null;
         try { data = await resposta.json(); } catch (e) { /* sem corpo JSON */ }
         if (resposta.status === 401 && auth && token) { Sessao.sair('expirada'); }
-        const message = (data && (data.mensagem || data.message)) || (resposta.ok ? '' : 'Não foi possível concluir a operação.');
+        const message = (data && data.message) || (resposta.ok ? '' : 'Não foi possível concluir a operação.');
         return { ok: resposta.ok, status: resposta.status, data, message };
     }
 
