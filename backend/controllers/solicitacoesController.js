@@ -18,16 +18,16 @@ const MENSAGENS = {
 };
 
 
-function regra(http, mensagem) {
-    const erro = new Error(mensagem);
+function regra(http, message) {
+    const erro = new Error(message);
     erro.http = http;
     return erro;
 }
 
 function responderErro(erro, res, next) {
-    if (erro.http) return res.status(erro.http).json({ mensagem: erro.message });
+    if (erro.http) return res.status(erro.http).json({ message: erro.message });
     if (erro.code === 'ER_DUP_ENTRY') {
-        return res.status(409).json({ mensagem: 'Este número de microchip já está registrado em outro animal.' });
+        return res.status(409).json({ message: 'Este número de microchip já está registrado em outro animal.' });
     }
     next(erro);
 }
@@ -36,7 +36,7 @@ async function listarSolicitacoes(req, res, next) {
     try {
         const { status } = req.query;
         if (status !== undefined && !STATUS.includes(status)) {
-            return res.status(400).json({ mensagem: 'Status inválido.' });
+            return res.status(400).json({ message: 'Status inválido.' });
         }
 
         const condicoes = [];
@@ -79,12 +79,12 @@ async function criarSolicitacao(req, res, next) {
     try {
         const { animal_id, agenda_id, cad_unico, observacoes } = req.body;
         if (!Number.isInteger(animal_id) || animal_id <= 0 || !Number.isInteger(agenda_id) || agenda_id <= 0) {
-            return res.status(400).json({ mensagem: 'Selecione o animal e o horário.' });
+            return res.status(400).json({ message: 'Selecione o animal e o horário.' });
         }
         const cad = typeof cad_unico === 'string' && cad_unico.trim() ? cad_unico.trim() : null;
         const obs = typeof observacoes === 'string' && observacoes.trim() ? observacoes.trim() : null;
         if ((cad && cad.length > 20) || (obs && obs.length > 500)) {
-            return res.status(400).json({ mensagem: 'CadÚnico (até 20) ou observações (até 500 caracteres) muito longos.' });
+            return res.status(400).json({ message: 'CadÚnico (até 20) ou observações (até 500 caracteres) muito longos.' });
         }
 
         conexao = await pool.getConnection();
@@ -119,7 +119,7 @@ async function criarSolicitacao(req, res, next) {
             [animal_id, agenda_id, cad, obs]
         );
         await conexao.commit();
-        res.status(201).json({ mensagem: 'Solicitação enviada! Aguarde a análise da prefeitura.', id: r.insertId });
+        res.status(201).json({ message: 'Solicitação enviada! Aguarde a análise da prefeitura.', id: r.insertId });
     } catch (erro) {
         if (conexao) await conexao.rollback();
         responderErro(erro, res, next);
@@ -134,7 +134,7 @@ async function atualizarStatusSolicitacao(req, res, next) {
         const id = Number(req.params.id);
         const { status: novo, justificativa, microchip } = req.body;
         if (!Number.isInteger(id) || id <= 0 || !STATUS.includes(novo)) {
-            return res.status(400).json({ mensagem: 'Informe uma solicitação e um status válidos.' });
+            return res.status(400).json({ message: 'Informe uma solicitação e um status válidos.' });
         }
 
         conexao = await pool.getConnection();
@@ -182,7 +182,7 @@ async function atualizarStatusSolicitacao(req, res, next) {
         }
 
         await conexao.commit();
-        res.json({ mensagem: MENSAGENS[novo] });
+        res.json({ message: MENSAGENS[novo] });
     } catch (erro) {
         if (conexao) await conexao.rollback();
         responderErro(erro, res, next);
@@ -194,20 +194,20 @@ async function atualizarStatusSolicitacao(req, res, next) {
 async function removerSolicitacao(req, res, next) {
     try {
         const id = Number(req.params.id);
-        if (!Number.isInteger(id) || id <= 0) return res.status(400).json({ mensagem: 'Solicitação inválida.' });
+        if (!Number.isInteger(id) || id <= 0) return res.status(400).json({ message: 'Solicitação inválida.' });
 
         const [linhas] = await pool.execute(
             `SELECT s.id, s.status, an.tutor_id
              FROM solicitacoes s JOIN animais an ON an.id = s.animal_id WHERE s.id = ?`, [id]
         );
         if (linhas.length === 0 || (req.usuario.perfil === 'TUTOR' && linhas[0].tutor_id !== req.usuario.id)) {
-            return res.status(404).json({ mensagem: 'Solicitação não encontrada.' });
+            return res.status(404).json({ message: 'Solicitação não encontrada.' });
         }
         if (!['PENDENTE', 'RECUSADO', 'CANCELADO'].includes(linhas[0].status)) {
-            return res.status(409).json({ mensagem: 'Só é possível excluir solicitações pendentes, recusadas ou canceladas.' });
+            return res.status(409).json({ message: 'Só é possível excluir solicitações pendentes, recusadas ou canceladas.' });
         }
         await pool.execute('DELETE FROM solicitacoes WHERE id = ?', [id]);
-        res.json({ mensagem: 'Solicitação excluída.' });
+        res.json({ message: 'Solicitação excluída.' });
     } catch (erro) {
         next(erro);
     }

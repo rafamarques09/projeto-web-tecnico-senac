@@ -38,19 +38,19 @@ async function criarAgenda(req, res, next) {
         const { data, horario, vagas, ativa } = req.body;
         if (!dataValida(data) || !horarioValido(horario) || !vagasValidas(vagas) ||
             (ativa !== undefined && typeof ativa !== 'boolean')) {
-            return res.status(400).json({ mensagem: 'Informe data, horário (HH:MM) e vagas (1 a 100) válidos.' });
+            return res.status(400).json({ message: 'Informe data, horário (HH:MM) e vagas (1 a 100) válidos.' });
         }
         if (data < hojeISO()) {
-            return res.status(400).json({ mensagem: 'A data não pode estar no passado.' });
+            return res.status(400).json({ message: 'A data não pode estar no passado.' });
         }
         const [r] = await pool.execute(
             'INSERT INTO agenda (data, horario, vagas, ativa) VALUES (?, ?, ?, ?)',
             [data, horario + ':00', vagas, ativa === undefined ? true : ativa]
         );
-        res.status(201).json({ mensagem: 'Horário cadastrado na agenda.', id: r.insertId });
+        res.status(201).json({ message: 'Horário cadastrado na agenda.', id: r.insertId });
     } catch (erro) {
         if (erro.code === 'ER_DUP_ENTRY') {
-            return res.status(409).json({ mensagem: 'Já existe um horário cadastrado para esta data e hora.' });
+            return res.status(409).json({ message: 'Já existe um horário cadastrado para esta data e hora.' });
         }
         next(erro);
     }
@@ -62,7 +62,7 @@ async function atualizarAgenda(req, res, next) {
         const { data, horario, vagas, ativa } = req.body;
         if (!Number.isInteger(id) || id <= 0 || !dataValida(data) || !horarioValido(horario) ||
             !vagasValidas(vagas) || typeof ativa !== 'boolean') {
-            return res.status(400).json({ mensagem: 'Informe data, horário (HH:MM), vagas (1 a 100) e situação válidos.' });
+            return res.status(400).json({ message: 'Informe data, horário (HH:MM), vagas (1 a 100) e situação válidos.' });
         }
 
         const [atual] = await pool.execute(
@@ -70,7 +70,7 @@ async function atualizarAgenda(req, res, next) {
             [id]
         );
         if (atual.length === 0) {
-            return res.status(404).json({ mensagem: 'Horário não encontrado.' });
+            return res.status(404).json({ message: 'Horário não encontrado.' });
         }
 
         const [uso] = await pool.execute(
@@ -80,23 +80,23 @@ async function atualizarAgenda(req, res, next) {
         const mudouDataHora = atual[0].data !== data || atual[0].horario !== horario;
 
         if (mudouDataHora && ocupadas > 0) {
-            return res.status(409).json({ mensagem: 'Este horário já tem solicitações: não é possível mudar a data ou a hora.' });
+            return res.status(409).json({ message: 'Este horário já tem solicitações: não é possível mudar a data ou a hora.' });
         }
         if (mudouDataHora && data < hojeISO()) {
-            return res.status(400).json({ mensagem: 'A data não pode estar no passado.' });
+            return res.status(400).json({ message: 'A data não pode estar no passado.' });
         }
         if (vagas < ocupadas) {
-            return res.status(409).json({ mensagem: 'Já existem ' + ocupadas + ' solicitações neste horário: as vagas não podem ser menos que isso.' });
+            return res.status(409).json({ message: 'Já existem ' + ocupadas + ' solicitações neste horário: as vagas não podem ser menos que isso.' });
         }
 
         await pool.execute(
             'UPDATE agenda SET data = ?, horario = ?, vagas = ?, ativa = ? WHERE id = ?',
             [data, horario + ':00', vagas, ativa, id]
         );
-        res.json({ mensagem: 'Horário atualizado.' });
+        res.json({ message: 'Horário atualizado.' });
     } catch (erro) {
         if (erro.code === 'ER_DUP_ENTRY') {
-            return res.status(409).json({ mensagem: 'Já existe um horário cadastrado para esta data e hora.' });
+            return res.status(409).json({ message: 'Já existe um horário cadastrado para esta data e hora.' });
         }
         next(erro);
     }
@@ -106,18 +106,18 @@ async function removerAgenda(req, res, next) {
     try {
         const id = Number(req.params.id);
         if (!Number.isInteger(id) || id <= 0) {
-            return res.status(400).json({ mensagem: 'Horário inválido.' });
+            return res.status(400).json({ message: 'Horário inválido.' });
         }
         const [existe] = await pool.execute('SELECT id FROM agenda WHERE id = ?', [id]);
         if (existe.length === 0) {
-            return res.status(404).json({ mensagem: 'Horário não encontrado.' });
+            return res.status(404).json({ message: 'Horário não encontrado.' });
         }
         const [uso] = await pool.execute('SELECT COUNT(*) AS total FROM solicitacoes WHERE agenda_id = ?', [id]);
         if (uso[0].total > 0) {
-            return res.status(409).json({ mensagem: 'Este horário tem solicitações. Feche o horário em vez de excluir.' });
+            return res.status(409).json({ message: 'Este horário tem solicitações. Feche o horário em vez de excluir.' });
         }
         await pool.execute('DELETE FROM agenda WHERE id = ?', [id]);
-        res.json({ mensagem: 'Horário excluído da agenda.' });
+        res.json({ message: 'Horário excluído da agenda.' });
     } catch (erro) {
         next(erro);
     }

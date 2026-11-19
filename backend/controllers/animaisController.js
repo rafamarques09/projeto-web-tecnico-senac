@@ -54,13 +54,13 @@ async function listarAnimais(req, res, next) {
 async function criarAnimal(req, res, next) {
     try {
         const { erro, dados } = validarAnimal(req.body);
-        if (erro) return res.status(400).json({ mensagem: erro });
+        if (erro) return res.status(400).json({ message: erro });
 
         const [r] = await pool.execute(
             'INSERT INTO animais (tutor_id, nome, especie, sexo, raca, porte, idade_meses) VALUES (?, ?, ?, ?, ?, ?, ?)',
             [req.usuario.id, dados.nome, dados.especie, dados.sexo, dados.raca, dados.porte, dados.idade]
         );
-        res.status(201).json({ mensagem: 'Animal cadastrado.', id: r.insertId });
+        res.status(201).json({ message: 'Animal cadastrado.', id: r.insertId });
     } catch (erro) {
         next(erro);
     }
@@ -69,18 +69,18 @@ async function criarAnimal(req, res, next) {
 async function atualizarAnimal(req, res, next) {
     try {
         const id = Number(req.params.id);
-        if (!Number.isInteger(id) || id <= 0) return res.status(400).json({ mensagem: 'Animal inválido.' });
+        if (!Number.isInteger(id) || id <= 0) return res.status(400).json({ message: 'Animal inválido.' });
         const { erro, dados } = validarAnimal(req.body);
-        if (erro) return res.status(400).json({ mensagem: erro });
+        if (erro) return res.status(400).json({ message: erro });
 
         const [animal] = await pool.execute('SELECT id FROM animais WHERE id = ? AND tutor_id = ?', [id, req.usuario.id]);
-        if (animal.length === 0) return res.status(404).json({ mensagem: 'Animal não encontrado.' });
+        if (animal.length === 0) return res.status(404).json({ message: 'Animal não encontrado.' });
 
         await pool.execute(
             'UPDATE animais SET nome = ?, especie = ?, sexo = ?, raca = ?, porte = ?, idade_meses = ? WHERE id = ?',
             [dados.nome, dados.especie, dados.sexo, dados.raca, dados.porte, dados.idade, id]
         );
-        res.json({ mensagem: 'Animal atualizado.' });
+        res.json({ message: 'Animal atualizado.' });
     } catch (erro) {
         next(erro);
     }
@@ -89,17 +89,17 @@ async function atualizarAnimal(req, res, next) {
 async function removerAnimal(req, res, next) {
     try {
         const id = Number(req.params.id);
-        if (!Number.isInteger(id) || id <= 0) return res.status(400).json({ mensagem: 'Animal inválido.' });
+        if (!Number.isInteger(id) || id <= 0) return res.status(400).json({ message: 'Animal inválido.' });
 
         const [animal] = await pool.execute('SELECT id FROM animais WHERE id = ? AND tutor_id = ?', [id, req.usuario.id]);
-        if (animal.length === 0) return res.status(404).json({ mensagem: 'Animal não encontrado.' });
+        if (animal.length === 0) return res.status(404).json({ message: 'Animal não encontrado.' });
 
         const [uso] = await pool.execute('SELECT COUNT(*) AS total FROM solicitacoes WHERE animal_id = ?', [id]);
         if (uso[0].total > 0) {
-            return res.status(409).json({ mensagem: 'Este animal tem solicitações. Exclua as solicitações primeiro (animais já atendidos ficam no histórico).' });
+            return res.status(409).json({ message: 'Este animal tem solicitações. Exclua as solicitações primeiro (animais já atendidos ficam no histórico).' });
         }
         await pool.execute('DELETE FROM animais WHERE id = ?', [id]);
-        res.json({ mensagem: 'Animal excluído.' });
+        res.json({ message: 'Animal excluído.' });
     } catch (erro) {
         next(erro);
     }
