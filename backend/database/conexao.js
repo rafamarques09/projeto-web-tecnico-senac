@@ -22,7 +22,7 @@ async function testarConexao() {
         console.log("Banco de dados conectado com sucesso");
     } catch (error) {
         console.error("Não foi possível conectar ao banco de dados");
-        console.error(`Detalhes do erro: ${erro.message}`);
+        console.error(`Detalhes do erro: ${error.message}`);
         process.exit(1);
     } finally {
         if (conexao) {
