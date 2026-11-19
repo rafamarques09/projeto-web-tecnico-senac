@@ -6,38 +6,70 @@ function emailValido(email){
     return typeof email === 'string' && email.length <= 180 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
+function so(v) {
+    return String(v ?? '').replace(/\D/g, '');
+}
+
+function cpfValido(v) {
+    const d = so(v);
+    if (d.length !== 11 || /^(\d)\1{10}$/.test(d)) return false;
+
+    for (const t of [9, 10]) {
+        let s = 0;
+        for (let i = 0; i < t; i++) {
+            s += Number(d[i]) * (t + 1 - i);
+        }
+        if (((s * 10) % 11) % 10 !== Number(d[t])) return false;
+    }
+
+    return true;
+}
+
 async function cadastrar(req, res, next) {
     try {
-        const {nome, email, senha, cpf, telefone} = req.body;
-        if (typeof nome !=='string' || nome.trim().length < 2 || nome.trim().length > 100 || 
+        const { nome, email, senha, cpf, telefone } = req.body;
+
+        if (
+            typeof nome !== 'string' ||
+            nome.trim().length < 2 ||
+            nome.trim().length > 100 ||
             !emailValido(email) ||
-            typeof senha !== 'string' || senha.length < 8 || Buffer.byteLength(senha, 'utf8') > 72) {
-                return res.status(400).json({
-                    message: 'Informe nome (2 a 100 caracteres), e-mail válido e senha com no mínimo 8 caracteres.'
-                });
-            }
-        
+            typeof senha !== 'string' ||
+            senha.length < 8 ||
+            Buffer.byteLength(senha, 'utf8') > 72
+        ) {
+            return res.status(400).json({
+                message: 'Informe nome (2 a 100 caracteres), e-mail válido e senha com no mínimo 8 caracteres.'
+            });
+        }
+
         let cpfLimpo = null;
-        if (cpf !== undefined && cpf !== null & String(cpf).trim() != ''){
-            cpfLimpo = String(cpf).replace(/\D/g, '');
-            if (cpfLimpo.length !== 11){
+        if (cpf !== undefined && cpf !== null && String(cpf).trim() !== '') {
+            cpfLimpo = so(cpf);
+            if (!cpfValido(cpfLimpo)) {
                 return res.status(400).json({
-                    message:'CPF deve ter 11 digitos.'
+                    message: 'CPF inválido.'
                 });
             }
         }
-        const telefoneLimpo = typeof telefone === 'string' && telefone.trim() ? telefone.trim().slice(0,20) : null;
+
+        const telefoneLimpo =
+            typeof telefone === 'string' && telefone.trim()
+                ? telefone.trim().slice(0, 20)
+                : null;
 
         const senhaProtegida = await bcrypt.hash(senha, 10);
 
-        const [resultado] = await pool.execute("INSERT INTO usuarios (nome, email, senha, cpf, telefone, perfil) VALUES (?, ?, ?, ?, ?, 'TUTOR')",
+        await pool.execute(
+            "INSERT INTO usuarios (nome, email, senha, cpf, telefone, perfil) VALUES (?, ?, ?, ?, ?, 'TUTOR')",
             [nome.trim(), email.trim().toLowerCase(), senhaProtegida, cpfLimpo, telefoneLimpo]
         );
+
         return res.status(201).json({
-            message:'Cadastro realizado com sucesso.'
-        })
+            message: 'Cadastro realizado com sucesso.'
+        });
     } catch (erro) {
-        if (erro.code === 'ER_DUP_ENTRY'){
+        if (erro.code === 'ER_DUP_ENTRY') {
             return res.status(409).json({
                 message: 'E-mail ou CPF já cadastrado.'
             });
