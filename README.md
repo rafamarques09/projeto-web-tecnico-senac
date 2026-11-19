@@ -2,6 +2,26 @@
 
 Sistema web desenvolvido para gestão de solicitações de castração, identificação eletrônica por microchip e controle de cotas em parceria com clínicas veterinárias conveniadas.
 
+**Sumário**
+
+1. [Contextualização e Problema Identificado](#contextualização-e-problema-identificado)
+2. [Proposta de Solução](#proposta-de-solução)
+3. [Principais Funcionalidades Previstas](#principais-funcionalidades-previstas)
+4. [Tipos de Usuários e Ações Previstas](#tipos-de-usuários-e-ações-previstas)
+5. [Fluxo Básico de Funcionamento](#fluxo-básico-de-funcionamento)
+6. [Agenda de Atendimento](#agenda-de-atendimento)
+7. [Tecnologias](#tecnologias)
+8. [Estrutura do Projeto](#estrutura-do-projeto)
+9. [Banco de Dados](#banco-de-dados)
+10. [Como Executar](#como-executar)
+11. [Autenticação e Segurança](#autenticação-e-segurança)
+12. [Rotas da API](#rotas-da-api)
+13. [Permissões por Perfil](#permissões-por-perfil)
+14. [Regras de Negócio](#regras-de-negócio)
+15. [Como Testar](#como-testar)
+16. [Limitações Conhecidas](#limitações-conhecidas)
+17. [Andamento do Projeto](#andamento-do-projeto)
+
 ---
 
 ## Contextualização e Problema Identificado
@@ -86,11 +106,32 @@ A organização dos agendamentos é feita por uma **agenda de dias e horários**
 
 | Camada | Tecnologias |
 | :--- | :--- |
-| Front-end *(previsto para a Entrega 3)* | HTML5, CSS3, JavaScript (manipulação do DOM e Fetch API) |
+| Front-end | HTML5, CSS3, JavaScript (manipulação do DOM e Fetch API) |
 | Back-end | Node.js, Express |
 | Banco de dados | MySQL (`mysql2`) |
 | Autenticação | JWT (`jsonwebtoken`) e `bcryptjs` |
 | Outros | `dotenv`, `cors` |
+
+### Atualização das tecnologias e dependências
+
+| Pacote (`backend/package.json`) | Função no projeto |
+| :--- | :--- |
+| `express` | Servidor HTTP, rotas e entrega dos arquivos do front-end |
+| `mysql2` | Conexão com o MySQL (pool de conexões e consultas parametrizadas) |
+| `bcryptjs` | Geração e comparação do hash das senhas |
+| `jsonwebtoken` | Geração e validação do token JWT |
+| `dotenv` | Leitura das variáveis do arquivo `.env` |
+| `cors` | Controle das origens autorizadas a chamar a API |
+
+**Scripts disponíveis** (executar dentro de `backend/`):
+
+| Comando | O que faz |
+| :--- | :--- |
+| `npm run dev` | Inicia o servidor com reinício automático ao salvar arquivos (`node --watch`) |
+| `npm start` | Inicia o servidor normalmente (`node server.js`) |
+| `npm run seed` | Cria as três contas de demonstração (`ADMIN`, `CLINICA` e `TUTOR`), sem duplicar as que já existem |
+
+O front-end não usa bibliotecas externas de JavaScript. A única dependência externa carregada pelo navegador é a fonte do Google Fonts (Inter e Manrope).
 
 ---
 
@@ -122,9 +163,50 @@ projeto-web-tecnico-senac/
 │   ├── agendamentoCastrapet.sql    estrutura do banco
 │   └── dadosTeste.sql              dados de demonstração
 └── README.md
+└── INICIO-RAPIDO.md
 ```
 
 O back-end separa responsabilidades: **routes** (endereços), **controllers** (regras e acesso ao banco), **middlewares** (autenticação, autorização e CORS) e **database** (conexão).
+
+### Complemento da estrutura
+
+- O arquivo **`INICIO-RAPIDO.md`** (na raiz) é um guia curto com o resumo do projeto, o passo a passo para rodar e uma tabela de problemas comuns.
+- O **`.gitignore`** fica em `backend/` e impede o envio de `.env`, `node_modules/` e `*.log` ao GitHub. O arquivo `backend/.env.example` mostra quais variáveis precisam ser configuradas, sem conter nenhum segredo.
+- O servidor Express entrega a pasta `frontend/` (`express.static`). A raiz `/` redireciona para `login.html`.
+
+**Organização do front-end (`frontend/js/`):**
+
+| Arquivo | Responsabilidade |
+| :--- | :--- |
+| `config.js` | Configuração geral (endereço base da API e dados institucionais opcionais) |
+| `api.js` | Sessão do usuário (`Sessao`) e único ponto de requisições `fetch` (`Api.get`, `Api.post`, `Api.put`, `Api.del`), que já envia o token no cabeçalho `Authorization` |
+| `utils.js` | Máscaras de CPF e telefone, validações, avisos e mensagens na tela |
+| `components.js` | Estrutura comum das telas internas (menu lateral por perfil), tabelas, janelas modais e confirmações |
+| `icons.js` | Ícones em SVG |
+| demais arquivos | Um script por página (por exemplo, `animais.js`, `triagem.js`, `agenda.js`) |
+
+**Páginas do sistema:**
+
+| Perfil | Página | O que o usuário faz nela |
+| :--- | :--- | :--- |
+| Público | `index.html` | Apresenta o programa, como solicitar o atendimento, orientações e perguntas frequentes |
+| Público | `cadastro.html` | Cria a conta de tutor, com máscara e validação de CPF, telefone e senha |
+| Público | `login.html` | Entra no sistema e é levado ao painel do seu perfil |
+| `TUTOR` | `tutor.html` | Visão geral: indicadores, próximo atendimento e histórico recente |
+| `TUTOR` | `animais.html` | Cadastra, edita e exclui os próprios animais |
+| `TUTOR` | `solicitar.html` | Assistente em 4 etapas: animal, data e horário, detalhes e revisão |
+| `TUTOR` | `solicitacoes.html` | Acompanha as solicitações, filtra por situação, cancela ou exclui |
+| `TUTOR` | `guia.html` | Consulta o encaminhamento e a guia pré-operatória, com opção de imprimir |
+| `ADMIN` | `admin.html` | Painel com indicadores e gráfico de solicitações por situação |
+| `ADMIN` | `triagem.html` | Aprova ou recusa solicitações (a recusa exige justificativa) |
+| `ADMIN` | `usuarios.html` | Lista e busca usuários e altera o perfil de acesso |
+| `ADMIN` | `animais-admin.html` | Consulta geral dos animais, com busca, filtros e paginação |
+| `ADMIN` e `CLINICA` | `agenda.html` | Calendário e cadastro, edição, fechamento e exclusão de horários |
+| `CLINICA` | `clinica.html` | Painel com os atendimentos do dia e os próximos procedimentos |
+| `CLINICA` | `atendimentos.html` | Registra o check-in e conclui o atendimento com o número do microchip |
+| Todos | `perfil.html` | Mostra os dados da conta e a descrição do perfil de acesso |
+
+As telas internas só abrem para o perfil correto: quem não está logado volta ao login, e quem tenta abrir a página de outro perfil é levado ao próprio painel. Esse controle no navegador é apenas conveniência; **a segurança de verdade está na API**, que valida o token e o perfil em cada requisição.
 
 ---
 
@@ -208,7 +290,23 @@ erDiagram
 | `agenda` | Restrição `UNIQUE (data, horario)` e `vagas > 0` |
 | `solicitacoes.status` | `PENDENTE`, `APROVADO`, `RECUSADO`, `CHECKIN`, `CONCLUIDO`, `CANCELADO` |
 
-Scripts: [`sql/castrapet.sql`](sql/castrapet.sql) (estrutura) e [`sql/dados_teste.sql`](sql/dados_teste.sql) (dados de demonstração).
+Scripts: [`sql/agendamentoCastrapet.sql`](sql/agendamentoCastrapet.sql) (estrutura) e [`sql/dadosTeste.sql`](sql/dadosTeste.sql) (dados de demonstração).
+
+### Arquivos SQL do repositório
+
+| Arquivo | Conteúdo | Ordem |
+| :--- | :--- | :---: |
+| `sql/agendamentoCastrapet.sql` | Cria o banco `castrapet` (utf8mb4) e as 4 tabelas, com chaves, índices, `UNIQUE`, `CHECK` e `ENUM` | 1º |
+| `sql/dadosTeste.sql` | Insere as 3 contas de demonstração (senhas já em hash bcrypt), 5 horários de agenda a partir da data atual, 2 animais e 1 solicitação pendente | 2º |
+
+O `agendamentoCastrapet.sql` pode ser executado novamente sem problemas (usa `IF NOT EXISTS`). O `dadosTeste.sql` não duplica as contas nem os horários, mas **cadastra de novo os animais e a solicitação de exemplo**; por isso, execute-o uma única vez em cada banco.
+
+**Decisões de modelagem:**
+
+- Os três perfis ficam na tabela `usuarios`, no campo `perfil`, em vez de uma tabela para cada tipo de usuário.
+- Todas as chaves estrangeiras usam o mecanismo `InnoDB`, que garante a integridade entre as tabelas. Por isso não é possível apagar um animal que tenha solicitações, nem um horário usado por uma solicitação (o sistema também trata isso na API, com mensagem clara).
+- O microchip é `UNIQUE` e começa vazio: só a clínica o preenche, ao concluir o atendimento.
+- O horário da agenda é único por data e hora (`UNIQUE (data, horario)`), e `vagas` precisa ser maior que zero (`CHECK`).
 
 ---
 
@@ -221,7 +319,7 @@ Scripts: [`sql/castrapet.sql`](sql/castrapet.sql) (estrutura) e [`sql/dados_test
    git clone https://github.com/rafamarques09/projeto-web-tecnico-senac.git
    cd projeto-web-tecnico-senac
    ```
-2. **Crie o banco:** no MySQL Workbench, execute `sql/castrapet.sql` e depois `sql/dados_teste.sql`.
+2. **Crie o banco:** no MySQL Workbench, execute `sql/agendamentoCastrapet.sql` e depois `sql/dadosTeste.sql`.
 3. **Entre na pasta do backend**
    ```bash
    cd backend
@@ -240,7 +338,7 @@ Scripts: [`sql/castrapet.sql`](sql/castrapet.sql) (estrutura) e [`sql/dados_test
    ```bash
    npm run dev
    ```
-8. A API fica disponível em **http://localhost:3000**. Como a interface (front-end) ainda não foi desenvolvida, teste as rotas pelo **Postman** ou **Thunder Client**.
+8. A aplicação fica disponível em **http://localhost:3000**.
 
 **Contas de demonstração** (apenas para uso local):
 
@@ -249,6 +347,38 @@ Scripts: [`sql/castrapet.sql`](sql/castrapet.sql) (estrutura) e [`sql/dados_test
 | `ADMIN` | admin@castrapet.com | Admin@123 |
 | `CLINICA` | clinica@castrapet.com | Clinica@123 |
 | `TUTOR` | tutor@castrapet.com | Tutor@123 |
+
+
+**Variáveis do arquivo `backend/.env`:**
+
+| Variável | Para que serve | Padrão se não informada |
+| :--- | :--- | :--- |
+| `PORT` | Porta do servidor | `3000` |
+| `DB_HOST` | Endereço do MySQL | `localhost` |
+| `DB_PORT` | Porta do MySQL | `3306` |
+| `DB_USER` | Usuário do MySQL | `root` |
+| `DB_PASSWORD` | Senha do MySQL | vazio |
+| `DB_NAME` | Nome do banco | `castrapet` |
+| `JWT_SECRET` | Segredo usado para assinar os tokens (**obrigatório**, mínimo de 32 caracteres) | nenhum: o servidor não inicia sem ele |
+| `JWT_EXPIRES_IN` | Validade do token | `2h` |
+| `FRONTEND_ORIGIN` | Origem extra liberada no CORS (só necessária se o site for aberto por outra porta, como o Live Server em `http://127.0.0.1:5500`) | `http://127.0.0.1:5500` |
+
+O arquivo `.env` contém dados privados e **nunca deve ser enviado ao GitHub**: ele já está no `.gitignore`. Use o `.env.example` como modelo.
+
+**Problemas comuns:**
+
+| Mensagem ou sintoma | O que fazer |
+| :--- | :--- |
+| `Configure JWT_SECRET com ao menos 32 caracteres` | Preencha o `JWT_SECRET` no `backend/.env` |
+| `ER_ACCESS_DENIED_ERROR` | Usuário ou senha do MySQL incorretos: confira `DB_USER` e `DB_PASSWORD` |
+| `ECONNREFUSED` | O MySQL não está ligado: inicie o serviço e tente de novo |
+| `ER_BAD_DB_ERROR` | O banco não existe: execute os scripts da pasta `sql/` |
+| `EADDRINUSE` | A porta 3000 já está em uso: feche o outro programa ou mude `PORT` no `.env` |
+| O login de demonstração não funciona | Execute o `dadosTeste.sql` depois do `agendamentoCastrapet.sql`, ou rode `npm run seed` |
+| A agenda não mostra horários futuros | Os horários de teste são criados para 7, 14 e 21 dias após a execução do script; cadastre novos horários como clínica na tela **Agenda** |
+| A página abre sem estilo ou sem dados | Acesse por `http://localhost:3000`, não pelo arquivo HTML aberto direto |
+
+Há também um passo a passo resumido no arquivo [`INICIO-RAPIDO.md`](INICIO-RAPIDO.md).
 
 ---
 
@@ -266,6 +396,32 @@ Scripts: [`sql/castrapet.sql`](sql/castrapet.sql) (estrutura) e [`sql/dados_test
 - A mensagem de erro do login é a mesma para e-mail inexistente e senha incorreta.
 - **Regra de negócio:** o sistema não permite remover o último administrador.
 - `.env`, `node_modules` e credenciais não são enviados ao GitHub (`.gitignore`).
+
+### Caminho de uma requisição autenticada
+
+```mermaid
+sequenceDiagram
+    participant N as Navegador (api.js)
+    participant R as Rotas
+    participant M as Middlewares
+    participant C as Controller
+    participant B as MySQL
+    N->>R: fetch com Authorization: Bearer token
+    R->>M: autenticacaoMiddleware valida o JWT e recarrega o usuário
+    M->>M: autorizacaoMiddleware confere o perfil
+    M->>C: requisição liberada
+    C->>B: consulta com parâmetros (?)
+    B-->>C: dados
+    C-->>N: JSON e código HTTP
+```
+
+### Segurança no front-end
+
+- O token e os dados básicos do usuário ficam no `localStorage` do navegador e são apagados ao sair da conta.
+- Se a API responder `401` (token expirado ou inválido), o front-end encerra a sessão e leva o usuário ao login com o aviso de sessão expirada.
+- Os textos que vêm do banco e são exibidos nas páginas (nomes, observações, justificativas etc.) passam por uma função de escape (`UI.esc`), o que evita a injeção de HTML ou scripts (XSS).
+- O cadastro valida CPF (com dígito verificador), telefone, e-mail e senha antes de enviar. A API repete as validações essenciais, pois o front-end sozinho não é confiável.
+- O limite de tamanho da senha (72 bytes) respeita a limitação do algoritmo bcrypt.
 
 ---
 
@@ -293,7 +449,7 @@ Scripts: [`sql/castrapet.sql`](sql/castrapet.sql) (estrutura) e [`sql/dados_test
 
 **Códigos de status usados:** `200` sucesso · `201` criado · `400` dados inválidos · `401` não autenticado · `403` sem permissão · `404` não encontrado · `409` conflito · `500` erro interno.
 
-As respostas de erro trazem um JSON com a descrição do problema (`message` ou `mensagem`); o front-end trata os dois nomes.
+As respostas de erro trazem um JSON com a descrição do problema (`message`);
 
 **Exemplo: login** (`POST /auth/login`, corpo JSON). A resposta traz o `token`.
 
@@ -333,6 +489,13 @@ As respostas de erro trazem um JSON com a descrição do problema (`message` ou 
 }
 ```
 
+### Observações sobre as rotas
+
+- Todas as rotas, exceto `POST /auth/cadastro` e `POST /auth/login`, exigem o cabeçalho `Authorization: Bearer <token>`.
+- As entidades principais têm CRUD completo: **agenda** (`POST`, `GET`, `PUT`, `DELETE`), **animais** (`POST`, `GET`, `PUT`, `DELETE`) e **solicitações** (`POST`, `GET`, `PUT` de status e `DELETE`). A rota de **usuários** permite listar e alterar o perfil.
+- Uma rota que não existe responde `404` com um JSON (`Rota não encontrada.`), e um JSON malformado no corpo da requisição responde `400`.
+- Os corpos das requisições são limitados a 100 KB.
+
 ---
 
 ## Permissões por Perfil
@@ -363,6 +526,23 @@ As respostas de erro trazem um JSON com a descrição do problema (`message` ou 
 - **Microchip:** exige 15 dígitos, é único no sistema e só a clínica o registra. Ao concluir, o animal passa a `castrado`.
 - **Dados do tutor protegidos:** cada tutor só enxerga e altera os próprios animais e solicitações.
 - **Cadastro:** a interface exige CPF válido (com dígito verificador) e telefone; a senha precisa ter no mínimo 8 caracteres.
+
+### Validação das mudanças de status
+
+A API só aceita as mudanças de status do fluxo descrito acima, e cada uma só pode ser feita pelo perfil responsável. Uma mudança fora do fluxo é rejeitada com `403` (o perfil não pode definir aquele status) ou `409` (o status atual não permite a transição). Ao concluir um atendimento, a atualização da solicitação e o registro do microchip no animal acontecem na mesma **transação**: ou as duas operações são gravadas, ou nenhuma.
+
+### Tratamento de erros
+
+| Onde | Como é tratado |
+| :--- | :--- |
+| API: dados inválidos | Responde `400` com mensagem explicando o que corrigir |
+| API: sem login ou sem permissão | Responde `401` (sem token, token inválido ou expirado) ou `403` (perfil sem permissão) |
+| API: conflito com as regras | Responde `409` (por exemplo, horário sem vagas, e-mail repetido, microchip já registrado) |
+| API: recurso de outro usuário | Responde `404`, sem revelar que o registro existe |
+| API: falha inesperada | Responde `500` com mensagem genérica; o detalhe técnico fica apenas no log do servidor, sem expor dados internos |
+| Banco de dados | Consultas com parâmetros (`?`) e transações com `rollback` em caso de erro |
+| Front-end | Mensagens de erro nos formulários, avisos (toasts) após cada operação, tela com botão **Tentar novamente** quando a carga falha e aviso claro quando o servidor não pode ser alcançado |
+| Inicialização | O servidor não sobe se o `JWT_SECRET` estiver ausente ou curto, ou se o banco estiver inacessível, e informa o motivo no terminal |
 
 ---
 
@@ -405,6 +585,28 @@ Nas rotas protegidas, envie o cabeçalho `Authorization: Bearer <token>` com o t
 | 13 | `DELETE /agenda/:id` de um horário com solicitações | `409` |
 | 14 | No banco: `SELECT email, senha FROM usuarios;` | Senhas aparecem como hash (`$2b$10$...`) |
 
+### Exemplos de teste pela linha de comando (`curl`)
+
+Com o servidor rodando em `http://localhost:3000`:
+
+```bash
+# 1) Fazer login e copiar o "token" da resposta
+curl -X POST http://localhost:3000/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"tutor@castrapet.com","senha":"Tutor@123"}'
+
+# 2) Usar o token em uma rota protegida (substitua SEU_TOKEN)
+curl http://localhost:3000/animais -H "Authorization: Bearer SEU_TOKEN"
+
+# 3) Mesma rota sem token: deve responder 401
+curl -i http://localhost:3000/animais
+
+# 4) Rota exclusiva do ADMIN com token de TUTOR: deve responder 403
+curl -i http://localhost:3000/usuarios -H "Authorization: Bearer SEU_TOKEN"
+```
+
+Esses testes comprovam que as permissões são verificadas **na API**, e não apenas escondidas na interface.
+
 ---
 
 ## Limitações Conhecidas
@@ -413,6 +615,14 @@ Nas rotas protegidas, envie o cabeçalho `Authorization: Bearer <token>` com o t
 - Não há cadastro de múltiplas clínicas, relatórios, edição dos dados pessoais nem recuperação de senha.
 - O perfil do usuário mostra CPF e telefone apenas quando a API os fornece (hoje, apenas na listagem do administrador).
 
+### Possíveis evoluções
+
+- Cadastro de várias clínicas conveniadas, cada uma com a sua agenda e as suas cotas de atendimento.
+- Relatórios de controle animal (animais atendidos e microchipados por período).
+- Restringir na API o check-in e a conclusão à data do agendamento.
+- Edição dos dados pessoais e recuperação de senha.
+- Notificação do tutor (e-mail ou mensagem) quando a solicitação mudar de situação.
+
 ---
 
 ## Andamento do Projeto
@@ -420,4 +630,4 @@ Nas rotas protegidas, envie o cabeçalho `Authorization: Bearer <token>` com o t
 - [x] **Entrega 1:** problema, proposta e estrutura inicial
 - [x] **Entrega 2:** banco de dados, cadastro e login, JWT, perfis e middlewares
 - [x] **Entrega 3:** interface (HTML, CSS e JavaScript com DOM e Fetch), CRUD completo (agenda, animais e solicitações), regras de negócio e permissões verificadas na API
-- [ ] **Entrega 4:** testes finais com o fluxo completo, tratamento de erros revisado, documentação final e apresentação
+- [x] **Entrega 4:** testes finais com o fluxo completo, tratamento de erros revisado, documentação final e apresentação
